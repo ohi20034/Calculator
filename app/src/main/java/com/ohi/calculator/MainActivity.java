@@ -8,7 +8,10 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-
+import java.util.Scanner;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 public class MainActivity extends AppCompatActivity {
     TextView topDisplay, bottomDisplay;
     Button one, two, three, four, five, six, seven, eight, nine, zero;
@@ -260,66 +263,91 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-    double getResult(String data)
+    double getResult(String s)
     {
-        int start = 0, i = -1;
-        boolean flag = false;
-        Stack<String> st = new Stack<>();
-        if (data.charAt(0) == '-') {
-            i = 0;
+        ArrayList<Double> all = new ArrayList<>();
+        ArrayList<Character> op = new ArrayList<>();
+        String temp = "";
+        Map<Character, Integer> mp = new HashMap<>();
+
+        for (int i = 0; i < s.length(); ++i) {
+            if(s.charAt(i)=='-' && i==0 ){
+                continue;
+            }
+            else if (s.charAt(i) == '+' || s.charAt(i) == '-' || s.charAt(i) == '*' || s.charAt(i) == '/' && i!=0) {
+                all.add(Double.parseDouble(temp));
+                op.add(s.charAt(i));
+                temp = "";
+                mp.put(s.charAt(i), mp.getOrDefault(s.charAt(i), 0) + 1);
+            } else {
+                temp += s.charAt(i);
+            }
         }
-        for (i = i+1; i < data.length(); ++i) {
-            if (data.charAt(i) == '+' || data.charAt(i) == '-' || data.charAt(i) == '*' || data.charAt(i) == '/' || data.charAt(i) == '%')
-            {
-                if(i==0){
-                    String temp="-";
-                    temp += data.substring(start,i);
-                    start = i+1;
-                    st.push(temp);
-                    st.push(String.valueOf(data.charAt(i)) + String.valueOf(data.charAt(i)));
+        all.add(Double.parseDouble(temp));
+        if(s.charAt(0)=='-'){
+            all.set(0,all.get(0)*-1);
+        }
+        //System.out.println(s);
+        while (!op.isEmpty()) {
+            while (mp.get('/') != null && mp.get('/') != 0) {
+                for (int i = 0; i < op.size(); ++i) {
+                    if (op.get(i) == '/') {
+                        double a = all.get(i);
+                        double b = all.get(i + 1);
+                        all.remove(i);
+                        all.set(i, a / b);
+                        op.remove(i);
+                        mp.put('/', mp.get('/') - 1);
+                        break;
+                    }
                 }
-                else {
-                    String temp = data.substring(start, i);
-                    start = i + 1;
-                    st.push(temp);
-                    st.push(String.valueOf(data.charAt(i)) + String.valueOf(data.charAt(i)));
+            }
+
+            while (mp.get('*') != null && mp.get('*') != 0) {
+                for (int i = 0; i < op.size(); ++i) {
+                    if (op.get(i) == '*') {
+                        double a = all.get(i);
+                        double b = all.get(i + 1);
+                        all.remove(i);
+                        all.set(i, a * b);
+                        op.remove(i);
+                        mp.put('*', mp.get('*') - 1);
+                        break;
+                    }
+                }
+            }
+
+            while (mp.get('-') != null && mp.get('-') != 0) {
+                for (int i = 0; i < op.size(); ++i) {
+                    if (op.get(i) == '-') {
+                        double a = all.get(i);
+                        double b = all.get(i + 1);
+                        all.remove(i);
+                        all.set(i, a - b);
+                        op.remove(i);
+                        mp.put('-', mp.get('-') - 1);
+                        break;
+                    }
+                }
+            }
+
+            while (mp.get('+') != null && mp.get('+') != 0) {
+                for (int i = 0; i < op.size(); ++i) {
+                    if (op.get(i) == '+') {
+                        double a = all.get(i);
+                        double b = all.get(i + 1);
+                        all.remove(i);
+                        all.set(i, a + b);
+                        op.remove(i);
+                        mp.put('+', mp.get('+') - 1);
+                        break;
+                    }
                 }
             }
         }
-        st.push(data.substring(start, data.length()));
+        return all.get(0);
+    }
 
-        int n = st.size();
-        String[] arr = new String[st.size()];
-        i = 0;
-        while (!st.isEmpty()) {
-            arr[i] = st.pop();
-            i++;
-        }
-        double first = Double.parseDouble(arr[n - 1]);
-        char smb = arr[n - 2].charAt(0);
-        double second = Double.parseDouble(arr[n - 3]);
-        double ans = ans(first, smb, second);
-        for (i = n - 4; i > 0; i -= 2) {
-            double temp = Double.parseDouble(arr[i - 1]);
-            ans = ans(ans, arr[i].charAt(0), temp);
-        }
-        return ans;
-    }
-    public static double ans(double first, char smb, double second) {
-        double result = 0.0;
-        if (smb == '+') {
-            result = first + second;
-        } else if (smb == '-') {
-            result = first - second;
-        } else if (smb == '*') {
-            result = first * second;
-        } else if (smb == '/') {
-            result = first / second;
-        } else if (smb == '%'){
-            result = first % second;
-        }
-        return result;
-    }
     public static boolean isNum(char ch){
         if(ch>='0' && ch<='9'){
             return true;
